@@ -1,0 +1,1304 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Noldan PC ustasigacha: kompyuter komponentlari, yig'ish, sozlash, diagnostika va interaktiv PC yig'ish o'yini.">
+<title>PC Usta — Noldan Ustagacha</title>
+<style>
+  :root{
+    --bg:#0a0e14; --panel:#121a24; --panel2:#18232f; --line:#243244;
+    --text:#e8eef5; --muted:#8fa0b3; --accent:#2ee6b0; --accent2:#5d8dff;
+    --warn:#ffb545; --danger:#ff5d6c; --radius:16px;
+    --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    --ddr5:#5d8dff; --ddr4:#2ee6b0; --ddr3:#ffb545;
+  }
+  [data-theme="light"]{
+    --bg:#f4f7fb; --panel:#ffffff; --panel2:#eaf0f7; --line:#d5deea;
+    --text:#13202c; --muted:#58697b; --accent:#0a9f7a; --accent2:#2f5fd0;
+    --warn:#b7791f; --danger:#c53030;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth;scroll-padding-top:76px}
+  body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--text);line-height:1.7;font-size:16px;overflow-x:hidden}
+  body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:-1;
+    background:radial-gradient(900px 500px at 10% -10%,color-mix(in srgb,var(--accent2) 18%,transparent),transparent 60%),
+               radial-gradient(800px 500px at 110% 10%,color-mix(in srgb,var(--accent) 14%,transparent),transparent 60%)}
+  a{color:var(--accent2)}
+  h1,h2,h3,h4{line-height:1.25;margin:0 0 .6em}
+  h2{font-size:clamp(1.5rem,4vw,2rem);margin-top:0;display:flex;align-items:center;gap:12px}
+  h3{font-size:1.2rem;color:var(--accent);margin-top:1.6em}
+  p{margin:0 0 1em}
+  code,pre{font-family:var(--mono);font-size:.9em}
+  code{background:var(--panel2);padding:.1em .4em;border-radius:6px}
+  pre{background:var(--panel2);padding:14px;border-radius:12px;overflow-x:auto;border:1px solid var(--line);white-space:pre}
+  .icon{width:40px;height:40px;flex:0 0 40px;color:var(--accent);filter:drop-shadow(0 0 8px color-mix(in srgb,var(--accent) 40%,transparent))}
+  .icon-lg{width:72px;height:72px;color:var(--accent)}
+
+  /* Header */
+  header.top{position:sticky;top:0;z-index:50;background:color-mix(in srgb,var(--bg) 85%,transparent);backdrop-filter:blur(12px);border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px;padding:10px 14px}
+  .brand{font-weight:800;font-size:1.1rem;letter-spacing:.3px;white-space:nowrap}
+  .brand span{color:var(--accent)}
+  .spacer{flex:1}
+  .progress-wrap{width:120px;height:8px;background:var(--panel2);border-radius:99px;overflow:hidden}
+  #progressBar{height:100%;width:0%;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .5s}
+  #progressText{font-size:.8rem;color:var(--muted);min-width:40px;text-align:right}
+  button,.btn{font:inherit;cursor:pointer;border:1px solid var(--line);background:var(--panel);color:var(--text);padding:9px 14px;border-radius:12px;transition:transform .15s,border-color .15s}
+  button:hover{border-color:var(--accent);transform:translateY(-1px)}
+  button:active{transform:scale(.97)}
+  #menuBtn{display:none}
+
+  /* Layout */
+  .layout{display:grid;grid-template-columns:280px minmax(0,1fr);min-height:calc(100vh - 60px)}
+  nav.side{position:sticky;top:60px;height:calc(100vh - 60px);overflow-y:auto;border-right:1px solid var(--line);padding:16px;background:color-mix(in srgb,var(--panel) 92%,transparent)}
+  #search{width:100%;padding:10px 12px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--text);font:inherit;margin-bottom:8px}
+  nav.side ul{list-style:none;padding:0;margin:0}
+  nav.side li a{display:flex;align-items:center;gap:8px;padding:9px 10px;border-radius:10px;color:var(--text);text-decoration:none;font-size:.93rem;transition:background .2s}
+  nav.side li a:hover,nav.side li a.active{background:var(--panel2);color:var(--accent)}
+  nav.side .done::after{content:"✓";margin-left:auto;color:var(--accent);font-weight:700}
+  nav.side .group{font-size:.7rem;text-transform:uppercase;letter-spacing:1.2px;color:var(--muted);margin:16px 6px 6px}
+  main{padding:28px clamp(14px,4vw,56px) 10px;max-width:980px;width:100%;min-width:0}
+  section.module{padding:34px 0 40px;border-bottom:1px solid var(--line);scroll-margin-top:76px}
+  .tag{display:inline-block;font-size:.74rem;padding:3px 10px;border-radius:99px;background:var(--panel2);color:var(--muted);margin:0 6px 8px 0}
+
+  /* Reveal animation */
+  .reveal{opacity:0;transform:translateY(24px);transition:opacity .7s ease,transform .7s ease}
+  .reveal.in{opacity:1;transform:none}
+
+  /* Hero */
+  .hero{display:grid;grid-template-columns:1.2fr 1fr;gap:24px;align-items:center;padding:36px 0 10px}
+  .hero h1{font-size:clamp(2.1rem,6vw,3.6rem);letter-spacing:-.5px}
+  .grad{background:linear-gradient(90deg,var(--accent),var(--accent2),var(--accent));background-size:200% auto;-webkit-background-clip:text;background-clip:text;color:transparent;animation:shine 4s linear infinite}
+  @keyframes shine{to{background-position:200% center}}
+  .lead{font-size:1.1rem;color:var(--muted);max-width:640px}
+  .hero-art{width:100%;max-width:340px;justify-self:center;animation:float 5s ease-in-out infinite}
+  @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
+  .led{animation:blink 1.6s steps(2,start) infinite}
+  .led.b{animation-delay:.8s;fill:var(--accent2)}
+  @keyframes blink{to{opacity:.15}}
+  .cta-row{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}
+  .cta{background:linear-gradient(90deg,var(--accent),var(--accent2));color:#031018;font-weight:800;border:none;padding:13px 22px;box-shadow:0 10px 30px -10px var(--accent)}
+
+  /* Stats */
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:22px 0}
+  .stat-n{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:16px;text-align:center}
+  .stat-n b{display:block;font-size:1.8rem;color:var(--accent)}
+  .stat-n span{font-size:.8rem;color:var(--muted)}
+
+  /* Blocks */
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:20px;margin:18px 0;transition:transform .25s,border-color .25s}
+  .card:hover{transform:translateY(-3px);border-color:color-mix(in srgb,var(--accent) 50%,var(--line))}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin:18px 0}
+  .callout{border-left:4px solid var(--accent2);background:var(--panel2);padding:14px 16px;border-radius:12px;margin:18px 0}
+  .callout.warn{border-color:var(--warn)}
+  .callout.danger{border-color:var(--danger)}
+  .callout strong{display:block;margin-bottom:4px}
+  .tw{overflow-x:auto;margin:16px 0;border-radius:12px;border:1px solid var(--line)}
+  table{width:100%;border-collapse:collapse;font-size:.93rem;min-width:420px}
+  th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{color:var(--muted);font-weight:600;font-size:.8rem;text-transform:uppercase;letter-spacing:.5px;background:var(--panel2)}
+  tr:last-child td{border-bottom:none}
+  ol.steps{counter-reset:s;list-style:none;padding:0;margin:14px 0}
+  ol.steps li{counter-increment:s;position:relative;padding:12px 12px 12px 58px;margin-bottom:10px;background:var(--panel);border:1px solid var(--line);border-radius:14px}
+  ol.steps li::before{content:counter(s);position:absolute;left:12px;top:12px;width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#04120d;font-weight:800;display:flex;align-items:center;justify-content:center}
+  ul.clean li{margin-bottom:7px}
+  .spec-bar{height:10px;background:var(--panel2);border-radius:99px;overflow:hidden;margin:4px 0 12px}
+  .spec-bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:99px;transition:width 1.2s ease}
+  .label-row{display:flex;justify-content:space-between;font-size:.9rem}
+  .done-check{display:inline-flex;align-items:center;gap:8px;margin-top:14px;color:var(--muted);cursor:pointer}
+  .done-check input{width:18px;height:18px;accent-color:var(--accent)}
+
+  /* Quiz */
+  .quiz .q{margin:16px 0}
+  .quiz label{display:block;padding:10px 12px;border:1px solid var(--line);border-radius:12px;margin:6px 0;cursor:pointer;transition:border-color .2s}
+  .quiz label:hover{border-color:var(--accent)}
+  .quiz input{margin-right:8px;accent-color:var(--accent)}
+  .result{font-weight:700;margin-top:12px;min-height:1.6em}
+  .checkbtn{background:var(--accent);color:#04120d;border:none;font-weight:700}
+
+  /* GAME */
+  .game-start{background:linear-gradient(135deg,var(--panel),var(--panel2));border:1px solid var(--line);border-radius:22px;padding:28px;text-align:center;position:relative;overflow:hidden}
+  .game-start::after{content:"";position:absolute;inset:-40%;background:conic-gradient(from 0deg,transparent,color-mix(in srgb,var(--accent) 12%,transparent),transparent 30%);animation:spin 10s linear infinite;pointer-events:none}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .game-start > *{position:relative}
+  .hidden{display:none!important}
+  .hud{display:flex;flex-wrap:wrap;gap:10px;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:10px 14px;margin-bottom:14px;font-size:.92rem}
+  .hud b{color:var(--accent)}
+  .hearts{color:var(--danger);letter-spacing:3px;font-size:1.1rem}
+  .game-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.25fr);gap:16px;align-items:start}
+  .stage{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:12px;position:sticky;top:76px}
+  .stage svg{width:100%;height:auto;display:block}
+  .built-list{list-style:none;padding:0;margin:10px 0 0;font-size:.85rem;color:var(--muted)}
+  .built-list li{padding:4px 0;border-bottom:1px dashed var(--line)}
+  .built-list li b{color:var(--text)}
+  .shop{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:16px}
+  .slot-title{font-size:1.15rem;color:var(--accent);margin:0 0 4px}
+  .slot-hint{color:var(--muted);font-size:.9rem;margin-bottom:12px}
+  .opts{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px}
+  .opt{border:1px solid var(--line);border-radius:14px;padding:12px;background:var(--bg);display:flex;flex-direction:column;gap:6px;transition:transform .2s,border-color .2s,box-shadow .2s}
+  .opt:hover{transform:translateY(-3px);border-color:var(--accent);box-shadow:0 10px 24px -12px var(--accent)}
+  .opt h4{margin:0;font-size:.98rem}
+  .opt .sp{font-size:.8rem;color:var(--muted);line-height:1.5;flex:1}
+  .opt .pr{font-family:var(--mono);color:var(--warn);font-size:.85rem}
+  .opt button{background:var(--accent);color:#04120d;border:none;font-weight:700;padding:8px}
+  .msg{margin-top:12px;padding:12px 14px;border-radius:12px;font-size:.92rem;min-height:0;display:none}
+  .msg.show{display:block;animation:pop .35s ease}
+  .msg.err{background:color-mix(in srgb,var(--danger) 14%,transparent);border:1px solid var(--danger)}
+  .msg.ok{background:color-mix(in srgb,var(--accent) 12%,transparent);border:1px solid var(--accent)}
+  .msg.warn{background:color-mix(in srgb,var(--warn) 14%,transparent);border:1px solid var(--warn)}
+  @keyframes pop{from{transform:scale(.96);opacity:0}to{transform:none;opacity:1}}
+  .shake{animation:shake .45s}
+  @keyframes shake{20%,60%{transform:translateX(-6px)}40%,80%{transform:translateX(6px)}}
+  .flash{animation:flash .6s}
+  @keyframes flash{0%{filter:brightness(1.8) drop-shadow(0 0 16px var(--accent))}100%{filter:none}}
+  .final{background:var(--panel);border:1px solid var(--accent);border-radius:22px;padding:22px;box-shadow:0 0 60px -20px var(--accent);animation:pop .6s ease}
+  .rating{font-size:clamp(3rem,10vw,5rem);font-weight:900;text-align:center;background:linear-gradient(90deg,var(--accent),var(--accent2));-webkit-background-clip:text;background-clip:text;color:transparent;line-height:1}
+  .final-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:center}
+  .final-grid svg{width:100%;height:auto}
+  .actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px;justify-content:center}
+  .best{color:var(--muted);font-size:.85rem;text-align:center;margin-top:8px}
+  .overlay{position:fixed;inset:0;background:#000b;display:flex;align-items:center;justify-content:center;z-index:90;padding:16px}
+  .overlay .box{background:var(--panel);border:1px solid var(--danger);border-radius:18px;padding:24px;max-width:420px;text-align:center}
+
+  footer{padding:24px;text-align:center;color:var(--muted);font-size:.85rem;border-top:1px solid var(--line)}
+  mark.hl{background:color-mix(in srgb,var(--warn) 35%,transparent);color:inherit;border-radius:4px}
+
+  /* Mobile */
+  @media (max-width:900px){
+    .layout{grid-template-columns:1fr}
+    nav.side{position:fixed;left:0;top:0;height:100vh;width:min(290px,84vw);transform:translateX(-105%);transition:transform .3s;z-index:60;padding-top:70px;box-shadow:none}
+    nav.side.open{transform:none;box-shadow:0 0 40px #000a}
+    #menuBtn{display:inline-block}
+    .hero{grid-template-columns:1fr;text-align:center}
+    .lead{margin:0 auto}
+    .hero-art{max-width:260px}
+    .cta-row{justify-content:center}
+    .game-grid{grid-template-columns:1fr}
+    .stage{position:static}
+    .stats{grid-template-columns:repeat(2,1fr)}
+  }
+  @media (max-width:520px){
+    html{scroll-padding-top:70px}
+    main{padding:18px 14px 8px}
+    .progress-wrap{width:64px}
+    .brand{font-size:1rem}
+    .final-grid{grid-template-columns:1fr}
+    .opts{grid-template-columns:1fr 1fr}
+    .opt .sp{font-size:.76rem}
+    ol.steps li{padding-left:52px}
+    .icon{width:32px;height:32px;flex-basis:32px}
+  }
+  @media (prefers-reduced-motion:reduce){
+    *,*::before,*::after{animation:none!important;transition:none!important}
+    .reveal{opacity:1;transform:none}
+  }
+  @media print{
+    header.top,nav.side,#menuBtn,.game-start,#oyin,.cta-row{display:none!important}
+    .layout{display:block}
+    body{background:#fff;color:#000}
+    .reveal{opacity:1;transform:none}
+    section.module{page-break-inside:avoid}
+  }
+</style>
+</head>
+<body>
+
+<!-- ICON SPRITE -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-cpu" viewBox="0 0 64 64"><rect x="16" y="16" width="32" height="32" rx="4" fill="none" stroke="currentColor" stroke-width="3"/><rect x="24" y="24" width="16" height="16" fill="currentColor" opacity=".5"/><g stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M24 6v8M32 6v8M40 6v8M24 50v8M32 50v8M40 50v8M6 24h8M6 32h8M6 40h8M50 24h8M50 32h8M50 40h8"/></g></symbol>
+    <symbol id="i-mobo" viewBox="0 0 64 64"><rect x="8" y="6" width="48" height="52" rx="3" fill="none" stroke="currentColor" stroke-width="3"/><rect x="16" y="14" width="12" height="12" fill="currentColor" opacity=".6"/><rect x="36" y="14" width="5" height="26" fill="currentColor"/><rect x="43" y="14" width="5" height="26" fill="currentColor"/><rect x="16" y="40" width="32" height="5" fill="currentColor"/></symbol>
+    <symbol id="i-ram" viewBox="0 0 64 64"><rect x="6" y="20" width="52" height="24" rx="3" fill="none" stroke="currentColor" stroke-width="3"/><g fill="currentColor"><rect x="12" y="38" width="3" height="6"/><rect x="20" y="38" width="3" height="6"/><rect x="28" y="38" width="3" height="6"/><rect x="36" y="38" width="3" height="6"/><rect x="44" y="38" width="3" height="6"/></g><rect x="12" y="26" width="40" height="6" fill="currentColor" opacity=".5"/></symbol>
+    <symbol id="i-gpu" viewBox="0 0 64 64"><rect x="4" y="18" width="56" height="26" rx="4" fill="none" stroke="currentColor" stroke-width="3"/><circle cx="20" cy="31" r="7" fill="none" stroke="currentColor" stroke-width="3"/><circle cx="40" cy="31" r="7" fill="none" stroke="currentColor" stroke-width="3"/><rect x="48" y="44" width="8" height="10" fill="currentColor"/></symbol>
+    <symbol id="i-ssd" viewBox="0 0 64 64"><rect x="10" y="12" width="44" height="40" rx="4" fill="none" stroke="currentColor" stroke-width="3"/><rect x="18" y="20" width="28" height="10" fill="currentColor" opacity=".6"/><rect x="18" y="36" width="12" height="8" fill="currentColor"/></symbol>
+    <symbol id="i-psu" viewBox="0 0 64 64"><rect x="6" y="14" width="52" height="36" rx="4" fill="none" stroke="currentColor" stroke-width="3"/><circle cx="40" cy="32" r="11" fill="none" stroke="currentColor" stroke-width="3"/><path d="M40 24l-4 9h8l-4 9" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/></symbol>
+    <symbol id="i-cool" viewBox="0 0 64 64"><circle cx="32" cy="32" r="24" fill="none" stroke="currentColor" stroke-width="3"/><g fill="currentColor" opacity=".7"><path d="M32 32 L32 12 A20 20 0 0 1 49 22 Z"/><path d="M32 32 L52 32 A20 20 0 0 1 42 49 Z"/><path d="M32 32 L12 32 A20 20 0 0 1 22 15 Z"/></g><circle cx="32" cy="32" r="4" fill="currentColor"/></symbol>
+    <symbol id="i-case" viewBox="0 0 64 64"><rect x="14" y="6" width="36" height="52" rx="4" fill="none" stroke="currentColor" stroke-width="3"/><circle cx="32" cy="22" r="5" fill="currentColor"/><rect x="22" y="34" width="20" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="2.5"/></symbol>
+    <symbol id="i-tools" viewBox="0 0 64 64"><path d="M14 50l22-22" stroke="currentColor" stroke-width="5" stroke-linecap="round"/><path d="M40 8a14 14 0 0 0-12 20L12 44a5 5 0 0 0 8 8l16-16a14 14 0 0 0 20-12l-8 4-6-2-2-6 4-8z" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/></symbol>
+    <symbol id="i-bios" viewBox="0 0 64 64"><rect x="8" y="10" width="48" height="36" rx="4" fill="none" stroke="currentColor" stroke-width="3"/><path d="M18 22h28M18 30h18" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><path d="M24 54h16M32 46v8" stroke="currentColor" stroke-width="3"/></symbol>
+    <symbol id="i-diag" viewBox="0 0 64 64"><path d="M6 34h12l6-14 8 26 6-16 4 4h16" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/></symbol>
+    <symbol id="i-book" viewBox="0 0 64 64"><path d="M10 12h16a6 6 0 0 1 6 6v34a5 5 0 0 0-5-5H10z M54 12H38a6 6 0 0 0-6 6v34a5 5 0 0 1 5-5h17z" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/></symbol>
+    <symbol id="i-game" viewBox="0 0 64 64"><rect x="6" y="20" width="52" height="28" rx="14" fill="none" stroke="currentColor" stroke-width="3"/><path d="M18 34h8M22 30v8" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><circle cx="42" cy="31" r="3" fill="currentColor"/><circle cx="48" cy="37" r="3" fill="currentColor"/></symbol>
+    <symbol id="i-shield" viewBox="0 0 64 64"><path d="M32 6l20 7v16c0 13-9 22-20 27C21 51 12 42 12 29V13z" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/><path d="M24 32l6 6 10-12" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  </defs>
+</svg>
+
+<header class="top">
+  <button id="menuBtn" aria-label="Menyu">☰</button>
+  <div class="brand">PC <span>Usta</span></div>
+  <div class="spacer"></div>
+  <div class="progress-wrap" title="Umumiy progress"><div id="progressBar"></div></div>
+  <span id="progressText">0%</span>
+  <button id="themeBtn" aria-label="Mavzu">🌓</button>
+</header>
+
+<div class="layout">
+<nav class="side" id="sidenav">
+  <input id="search" type="search" placeholder="Mavzu qidirish...">
+  <div class="group">Boshlash</div>
+  <ul>
+    <li><a href="#kirish">1. Kirish va PC nima</a></li>
+    <li><a href="#xavfsizlik">2. Xavfsizlik va asboblar</a></li>
+  </ul>
+  <div class="group">Komponentlar</div>
+  <ul>
+    <li><a href="#cpu">3. Protsessor (CPU)</a></li>
+    <li><a href="#mobo">4. Ona plata</a></li>
+    <li><a href="#ram">5. Operativ xotira (RAM)</a></li>
+    <li><a href="#gpu">6. Video karta (GPU)</a></li>
+    <li><a href="#storage">7. Saqlagichlar (SSD/HDD)</a></li>
+    <li><a href="#psu">8. Quvvat bloki (PSU)</a></li>
+    <li><a href="#cooling">9. Sovutish tizimi</a></li>
+    <li><a href="#case">10. Korpus va kabellar</a></li>
+  </ul>
+  <div class="group">Amaliyot</div>
+  <ul>
+    <li><a href="#yigish">11. PC yig'ish</a></li>
+    <li><a href="#bios">12. BIOS/UEFI va o'rnatish</a></li>
+    <li><a href="#diagnostika">13. Diagnostika</a></li>
+    <li><a href="#ustalik">14. Usta yo'li</a></li>
+  </ul>
+  <div class="group">Tayanch va o'yin</div>
+  <ul>
+    <li><a href="#glossary">15. Glossariy</a></li>
+    <li><a href="#test">16. Bilim testi</a></li>
+    <li><a href="#oyin">17. PC Usta o'yini 🎮</a></li>
+  </ul>
+</nav>
+
+<main>
+
+<!-- HERO -->
+<div class="hero reveal">
+  <div>
+    <span class="tag">0 dan boshlanadi</span><span class="tag">Amaliy</span><span class="tag">O'yin bilan</span>
+    <h1>Noldan <span class="grad">usta</span>gacha</h1>
+    <p class="lead">Kompyuter qanday ishlashini tushunishdan boshlab, uni yig'ish, sozlash, diagnostika qilish va nosozliklarni topishgacha — hammasi bitta joyda. Oxirida o'zingiz PC yig'ib, xatolaringiz bilan o'rganing.</p>
+    <div class="cta-row">
+      <a href="#kirish" class="btn cta" style="text-decoration:none">O'rganishni boshlash</a>
+      <a href="#oyin" class="btn" style="text-decoration:none">🎮 O'yinga o'tish</a>
+    </div>
+  </div>
+  <svg class="hero-art" viewBox="0 0 300 300" aria-hidden="true">
+    <defs>
+      <linearGradient id="gA" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2ee6b0"/><stop offset="1" stop-color="#5d8dff"/></linearGradient>
+    </defs>
+    <rect x="70" y="30" width="160" height="240" rx="18" fill="var(--panel)" stroke="url(#gA)" stroke-width="3"/>
+    <rect x="90" y="60" width="120" height="90" rx="8" fill="var(--panel2)"/>
+    <rect x="100" y="72" width="30" height="30" rx="4" fill="url(#gA)" opacity=".8"/>
+    <rect x="140" y="72" width="60" height="6" rx="3" fill="var(--muted)" opacity=".6"/>
+    <rect x="140" y="84" width="40" height="6" rx="3" fill="var(--muted)" opacity=".4"/>
+    <rect x="140" y="96" width="50" height="6" rx="3" fill="var(--muted)" opacity=".4"/>
+    <rect x="90" y="170" width="120" height="26" rx="6" fill="var(--panel2)"/>
+    <rect x="96" y="176" width="12" height="14" rx="2" fill="#2ee6b0"/>
+    <rect x="114" y="176" width="12" height="14" rx="2" fill="#5d8dff"/>
+    <rect x="132" y="176" width="12" height="14" rx="2" fill="#ffb545"/>
+    <circle cx="200" cy="234" r="8" class="led" fill="#2ee6b0"/>
+    <circle cx="180" cy="234" r="8" class="led b" fill="#5d8dff"/>
+    <rect x="90" y="208" width="120" height="30" rx="6" fill="var(--panel2)" stroke="var(--line)"/>
+    <path d="M100 222h100" stroke="var(--accent)" stroke-width="2" stroke-dasharray="4 6"><animate attributeName="stroke-dashoffset" from="0" to="-40" dur="1.4s" repeatCount="indefinite"/></path>
+  </svg>
+</div>
+
+<div class="stats reveal">
+  <div class="stat-n"><b data-count="17">0</b><span>bo'lim</span></div>
+  <div class="stat-n"><b data-count="8">0</b><span>asosiy komponent</span></div>
+  <div class="stat-n"><b data-count="25">0</b><span>glossariy atamasi</span></div>
+  <div class="stat-n"><b data-count="1">0</b><span>interaktiv o'yin</span></div>
+</div>
+
+<!-- 1. KIRISH -->
+<section class="module" id="kirish">
+  <h2 class="reveal"><svg class="icon"><use href="#i-book"/></svg>1. Kirish: PC nima?</h2>
+  <p class="reveal">Shaxsiy kompyuter (PC) — ma'lumotni qabul qiladigan, uni qayta ishlaydigan, saqlaydigan va natijani chiqaradigan elektron tizim. Uning ishi uchta asosiy vazifaga bo'linadi.</p>
+  <div class="grid reveal">
+    <div class="card"><b>Kiritish</b><br>Klaviatura, sichqoncha, skaner, mikrofon — tizimga ma'lumot beradi.</div>
+    <div class="card"><b>Qayta ishlash</b><br>CPU, GPU, RAM — barcha hisob-kitoblar shu yerda bo'ladi.</div>
+    <div class="card"><b>Saqlash</b><br>SSD, HDD — fayllar va o'rnatilgan dasturlar doimiy turadi.</div>
+    <div class="card"><b>Chiqarish</b><br>Monitor, karnay, printer — natijani ko'rsatadi.</div>
+  </div>
+
+  <h3 class="reveal">Apparat va dastur</h3>
+  <p class="reveal"><b>Apparat (hardware)</b> — ko'z bilan ko'rinadigan va qo'l bilan ushlanadigan qismlar. <b>Dastur (software)</b> — apparatda ishlaydigan ko'rsatmalar to'plami: operatsion tizim, brauzer, o'yinlar. Usta sifatida asosan apparat bilan ishlaysiz, lekin dasturiy qismni tushunish diagnostikada katta yordam beradi.</p>
+
+  <div class="callout reveal"><strong>Asosiy qoida</strong>Kompyuter ichida hamma narsa elektr va signal orqali ishlaydi. Shuning uchun har bir ulanishni tushunish va quvvat bilan ehtiyotkor ishlash — ustalikning birinchi qismi.</div>
+
+  <h3 class="reveal">Ikkilik tizim</h3>
+  <p class="reveal">Kompyuter faqat ikki holatni biladi: elektr bor (1) yoki yo'q (0). Matn, rasm va video shu bitlar ketma-ketligi bilan ifodalanadi. Bitta bayt — 8 bit. 1 KB ≈ 1024 bayt, 1 MB ≈ 1024 KB, 1 GB ≈ 1024 MB.</p>
+  <pre class="reveal">Misol: "A" harfi  →  01000001
+RAM 16 GB  →  16 × 1024 MB  →  ~17 milliard bayt</pre>
+
+  <h3 class="reveal">Kompyuter turlari</h3>
+  <div class="tw reveal"><table>
+    <tr><th>Turi</th><th>Xususiyati</th><th>Qachon kerak</th></tr>
+    <tr><td>Desktop (stol PC)</td><td>Modullarni almashtirish oson, kuchli, kengaytiriladi</td><td>Ish, o'yin, usta ishi</td></tr>
+    <tr><td>Laptop</td><td>Ixcham, batareya bor, ko'p qismlar payvandlangan</td><td>Harakatda ishlash</td></tr>
+    <tr><td>Server</td><td>24/7 ishlaydi, ko'p RAM, xatolarni tuzatuvchi xotira (ECC)</td><td>Korporativ infratuzilma</td></tr>
+    <tr><td>Mini PC / NUC</td><td>Juda kichik, kam quvvat sarflaydi</td><td>Ofis, media markaz</td></tr>
+  </table></div>
+  <label class="done-check"><input type="checkbox" class="modcheck" data-mod="kirish"> Bu bo'limni tugatdim</label>
+</section>
+
+<!-- 2. XAVFSIZLIK -->
+<section class="module" id="xavfsizlik">
+  <h2 class="reveal"><svg class="icon"><use href="#i-shield"/></svg>2. Xavfsizlik va asboblar</h2>
+  <p class="reveal">Usta uchun birinchi o'rganiladigan narsa — o'zingizni va apparatni shikastlamaslik. Ko'pchilik qimmat xatolar ehtiyotsizlik va noto'g'ri asbob tufayli bo'ladi.</p>
+
+  <div class="callout danger reveal"><strong>Elektr xavfsizligi</strong>Kompyuter quvvat blokiga ulangan bo'lsa, ichki qismlarga qo'l tegizmang. Ishni boshlashdan oldin kabelni rozetkadan chiqaring va 10–15 soniya kuting, kondensatorlar zaryadi tushsin. PSU tugmasini "O" holatiga qo'ying.</div>
+
+  <h3 class="reveal">Statik elektr (ESD)</h3>
+  <p class="reveal">Inson tanasida yig'ilgan statik zaryad bir necha ming volt bo'lishi mumkin, bu chip uchun halokatli. Qismlarga tegishdan oldin korpusning metall qismiga qo'lingizni tekkizing yoki antistatik bilaguzuk taqing. Qismlarni faqat qirralaridan ushlang.</p>
+
+  <h3 class="reveal">Minimal asboblar to'plami</h3>
+  <div class="tw reveal"><table>
+    <tr><th>Asbob</th><th>Nima uchun</th></tr>
+    <tr><td>Crosshead (Phillips) №2 va №1 otvertka</td><td>Vintlar va korpus qismlari uchun; magnitli uchli bo'lsa yaxshi</td></tr>
+    <tr><td>Kichik (mini) otvertka</td><td>Ona plata va kichik vintlar</td></tr>
+    <tr><td>Antistatik bilaguzuk</td><td>Statik zaryadni yerga o'tkazish</td></tr>
+    <tr><td>Multimetr</td><td>Kuchlanish, o'tkazuvchanlik va uzilishlarni o'lchash</td></tr>
+    <tr><td>Termal pasta</td><td>CPU va sovutgich o'rtasida issiqlik o'tkazish</td></tr>
+    <tr><td>Chirok va lupa</td><td>Kichik kontaktlar va shikastlanishlarni ko'rish</td></tr>
+    <tr><td>Quruq mato, izopropil spirt 90%+</td><td>Kontaktlar va eski pastani tozalash</td></tr>
+    <tr><td>Zip-tie va tasmalar</td><td>Kabellarni tartibga solish</td></tr>
+    <tr><td>Flesh-disk (8 GB+)</td><td>OS o'rnatish va BIOS yangilash</td></tr>
+  </table></div>
+  <label class="done-check"><input type="checkbox" class="modcheck" data-mod="xavfsizlik"> Bu bo'limni tugatdim</label>
+</section>
+
+<!-- 3. CPU -->
+<section class="module" id="cpu">
+  <h2 class="reveal"><svg class="icon"><use href="#i-cpu"/></svg>3. Protsessor (CPU)</h2>
+  <span class="tag">Miya</span><span class="tag">Eng qimmat qism</span>
+  <p class="reveal">CPU — kompyuterning asosiy hisoblash qurilmasi. U ko'rsatmalarni o'qiydi, bajaradi va natijani xotiraga qaytaradi. Har bir "fikr" aslida milliardlab tranzistorlarning yoqilib-o'chishidir.</p>
+
+  <h3 class="reveal">Asosiy ko'rsatkichlar</h3>
+  <div class="tw reveal"><table>
+    <tr><th>Parametr</th><th>Ma'nosi</th></tr>
+    <tr><td>Yadrolar (cores)</td><td>Bir vaqtda ishlaydigan mustaqil hisoblash bloklari. Ko'p vazifa uchun muhim.</td></tr>
+    <tr><td>Oqimlar (threads)</td><td>Har bir yadro qancha vazifani "bir vaqtda" ko'ra olishi (SMT / Hyper-Threading).</td></tr>
+    <tr><td>Takt chastotasi (GHz)</td><td>Soniyada necha marta hisoblash mumkin. Yagona ko'rsatkich emas.</td></tr>
+    <tr><td>Kesh (L1/L2/L3)</td><td>CPU ichidagi juda tez xotira. Katta kesh — ko'p ma'lumotni tez ishlatish.</td></tr>
+    <tr><td>TDP</td><td>Issiqlik tarqatish me'yori. Sovutgichni tanlashda muhim.</td></tr>
+    <tr><td>Soket (socket)</td><td>Ona plataga mos ulanish turi. Eng muhim moslik nuqtasi.</td></tr>
+  </table></div>
+
+  <div class="callout warn reveal"><strong>Eng keng tarqalgan xato</strong>CPU sotib olishda soket turini tekshirmaslik. Intel LGA1700 va AMD AM5 bir-biriga mos kelmaydi. Ona plata va CPU soketini ikkalasida ham tekshiring.</div>
+
+  <h3 class="reveal">CPU o'rnatish tamoyili</h3>
+  <ul class="clean reveal">
+    <li>CPU ning uchburchak yoki kesilgan burchagini soketdagi belgi bilan moslang.</li>
+    <li>CPU ni hech qachon kuch bilan bosmang — u o'z-o'zidan joyiga tushishi kerak.</li>
+    <li>Soket richagi yopilgach, CPU tekis joylashgan bo'lishi kerak.</li>
+  </ul>
+  <p class="reveal">Termal pasta: no'xat donasi o'lchamida markazga surting yoki sovutgich ostidagi yupqa qatlamni tekis taqsimlang. Ko'p pasta ham, kam pasta ham yomon.</p>
+  <label class="done-check"><input type="checkbox" class="modcheck" data-mod="cpu"> Bu bo'limni tugatdim</label>
+</section>
+
+<!-- 4. MOTHERBOARD -->
+<section class="module" id="mobo">
+  <h2 class="reveal"><svg class="icon"><use href="#i-mobo"/></svg>4. Ona plata (Motherboard)</h2>
+  <p class="reveal">Ona plata — barcha komponentlarni bir-biriga bog'lovchi asosiy plata. U ichki "yo'llar" (shina / bus) orqali ma'lumot almashinuvini ta'minlaydi.</p>
+
+  <div class="tw reveal"><table>
+    <tr><th>Qism</th><th>Vazifasi</th></tr>
+    <tr><td>CPU soketi</td><td>Protsessor o'rnatiladigan joy</td></tr>
+    <tr><td>Chipset</td><td>Komponentlar o'rtasidagi aloqani boshqaradi</td></tr>
+    <tr><td>RAM slotlari (DIMM)</td><td>Xotira modullari ulanadi</td></tr>
+    <tr><td>PCIe slotlari</td><td>Video karta, Wi-Fi karta va boshqa kengaytmalar</td></tr>
+    <tr><td>M.2 slotlari</td><td>NVMe SSD ni to'g'ridan-to'g'ri ulash</td></tr>
+    <tr><td>SATA portlari</td><td>HDD va an'anaviy SSD ulash</td></tr>
+    <tr><td>24-pin ATX va 8-pin CPU quvvat</td><td>Quvvat bloki ulanadigan joylar</td></tr>
+    <tr><td>Front panel header</td><td>Korpusdagi tugma, LED va USB simlari</td></tr>
+    <tr><td>BIOS/UEFI mikrochipi</td><td>Dastlabki yuklash dasturi saqlanadi</td></tr>
+    <tr><td>CMOS batareyasi (CR2032)</td><td>BIOS sozlamalari va vaqtni saqlaydi</td></tr>
+  </table></div>
+
+  <h3 class="reveal">Form-faktor</h3>
+  <p class="reveal"><b>ATX</b> — eng keng tarqalgan standart. <b>Micro-ATX</b> — o'rtacha. <b>Mini-ITX</b> — juda ixcham korpuslar uchun. Ona plata va korpus form-faktori mos bo'lishi shart: ATX plata mini-ITX korpusga sig'maydi.</p>
+
+  <div class="callout reveal"><strong>Chipset tanlash</strong>Intel uchun Z (overclock imkoniyati), B (asosiy) va H (ofis) seriyalari. AMD uchun X va B seriyalari. Kundalik ish uchun B seriya ko'pincha eng yaxshi narx/sifat nisbatiga ega.</div>
+  <label class="done-check"><input type="checkbox" class="modcheck" data-mod="mobo"> Bu bo'limni tugatdim</label>
+</section>
+
+<!-- 5. RAM -->
+<section class="module" id="ram">
+  <h2 class="reveal"><svg class="icon"><use href="#i-ram"/></svg>5. Operativ xotira (RAM)</h2>
+  <p class="reveal">RAM — ishlayotgan dasturlar va vaqtinchalik ma'lumotlar saqlanadigan xotira. Elektr o'chsa, tarkibi yo'qoladi. U diskdan ancha tez, lekin hajmi cheklangan.</p>
+
+  <h3 class="reveal">Asosiy parametrlar</h3>
+  <ul class="clean reveal">
+    <li><b>Turi:</b> DDR3, DDR4 yoki DDR5. Ular fizik jihatdan mos kelmaydi — slot va o'yiq boshqacha.</li>
+    <li><b>Hajmi:</b> 8 GB (minimal), 16 GB (zamonaviy standart), 32 GB+ (og'ir ish va montaj).</li>
+    <li><b>Chastota:</b> MHz yoki MT/s (masalan, DDR5-6000).</li>
+    <li><b>Latentlik (CL):</b> kichik raqam — tezroq javob. Chastota va CL birga qaraladi.</li>
+    <li><b>Kanal rejimi:</b> Dual-channel (2 ta modul juft slotda) odatda tezroq.</li>
+  </ul>
+
+  <h3 class="reveal">O'rnatish</h3>
+  <ol class="steps reveal">
+    <li>Ona plata qo'llanmasidan dual-channel slotlarni tekshiring (odatda A2 va B2).</li>
+    <li>Slotning ikki chetidagi ilgaklarni oching.</li>
+    <li>Moduldagi o'yiqni slotdagi chiqiqqa moslang.</li>
+    <li>Modulni ikki qo'l bilan tekis bosing — ikkala ilgak bir vaqtda "tiq" etib yopilsin.</li>
+  </ol>
+  <div class="callout warn reveal"><strong>Diqqat</strong>Modul qiyshaygan bo'lsa, ikkala tomonni barobar bosing. Majburlash ona platani sindirishi mumkin.</div>
+  <label class="done-check"><input type="checkbox" class="modcheck" data-mod="ram"> Bu bo'limni tugatdim</label>
+</section>
+
+<!-- 6. GPU -->
+<section class="module" id="gpu">
+  <h2 class="reveal"><svg class="icon"><use href="#i-gpu"/></svg>6. Video karta (GPU)</h2>
+  <p class="reveal">GPU — grafik va parallel hisob-kitoblar uchun mo'ljallangan protsessor. Minglab kichik yadrolar bilan bir vaqtda ko'p ish bajaradi: o'yin, montaj va sun'iy intellekt uchun ideal.</p>
+
+  <h3 class="reveal">Nimalarga e'tibor berish</h3>
+  <ul class="clean reveal">
+    <li><b>VRAM:</b> video xotira hajmi. 8 GB o'rtacha, 12–16 GB og'ir o'yin va montaj uchun.</li>
+    <li><b>PCIe versiyasi:</b> ona plata bilan mos bo'lishi kerak.</li>
+    <li><b>Uzunligi:</b> korpusga sig'ishini o'lchang. Ba'zi kartalar 30 sm dan uzun.</li>
+    <li><b>Quvvat talabi:</b> PSU da yetarli quvvat va to'g'ri PCIe kabel bo'lishi shart.</li>
+  </ul>
+
+  <h3 class="reveal">O'rnatish</h3>
+  <ol class="steps reveal">
+    <li>Korpusning orqa qopqog'idagi slot qopqoqlarini oling.</li>
+    <li>Ona platadagi asosiy PCIe x16 slotni tanlang (odatda CPU ga eng yaqini).</li>
+    <li>Slot ilgagini oching, kartani tekis bosib o'rnating.</li>
+    <li>Karta vintlari bilan korpusga mahkamlang.</li>
+    <li>PSU dan PCIe kabel ulang. Hech qachon bitta kabelning ikki uchini kartaga ulamang.</li>
+  </ol>
+  <label class="done-check"><input type="checkbox" class="modcheck" data-mod="gpu"> Bu bo'limni tugatdim</label>
+</section>
+
+<!-- 7. STORAGE -->
+<section class="module" id="storage">
+  <h2 class="reveal"><svg class="icon"><use href="#i-ssd"/></svg>7. Saqlagichlar: SSD va HDD</h2>
+  <p class="reveal">Saqlagich — ma'lumot doimiy saqlanadigan joy. Ikki asosiy turi: qattiq disk (HDD) va qattiq holatli disk (SSD).</p>
+  <div class="tw reveal"><table>
+    <tr><th></th><th>HDD</th><th>SATA SSD</th><th>NVMe SSD (M.2)</th></tr>
+    <tr><td>Tezlik</td><td>Past (100–200 MB/s)</td><td>Yaxshi (~500 MB/s)</td><td>Juda yuqori (3000–7000+ MB/s)</td></tr>
+    <tr><td>Harakatlanuvchi qism</td><td>Bor</td><td>Yo'q</td><td>Yo'q</td></tr>
+    <tr><td>Narx/GB</td><td>Eng arzon</td><td>O'rtacha</td><td>Yuqoriroq</td></tr>
+    <tr><td>Ulanish</td><td>SATA + quvvat</td><td>SATA + quvvat</td><td>M.2 slot</td></tr>
+    <tr><td>Zarbaga chidamlilik</td><td>Past</td><td>Yaxshi</td><td>Yaxshi, issiqlikka sezgir</td></tr>
+  </table></div>
+
+  <h3 class="reveal">M.2 SSD o'rnatish</h3>
+  <ol class="steps reveal">
+    <li>Ona plata qo'llanmasidan M.2 slot turini tekshiring (PCIe 3.0/4.0/5.0).</li>
+    <li>Agar bor bo'lsa, slot qopqog'ini yoki termal qalqonni oching.</li>
+    <li>Diskni 30° burchak ostida slotga kiriting.</li>
+    <li>Diskni tekis bosib, mahkamlash vintiga mahkamlang.</li>
+  </ol>
+
+  <h3 class="reveal">Ma'lumotni xavfsiz saqlash</h3>
+  <p class="reveal">Disk abadiy emas. SMART ma'lumotlarini kuzatib boring. Muhim fayllar uchun <b>3-2-1 qoidasi</b>: 3 ta nusxa, 2 xil saqlash turi, 1 nusxa boshqa joyda.</p>
+  <div class="callout warn reveal"><strong>Ogohlantirish</strong>SMART da "Reallocated Sectors" yoki "Pending Sectors" raqamlari oshayotgan bo'lsa, disk yaqinlashib kelayotgan nosozlikdan darak beradi. Darhol zaxira nusxa oling.</div>
+  <label class="done-check"><input type="checkbox" class="modcheck" data-mod="storage"> Bu bo'limni tugatdim</label>
+</section>
+
+<!-- 8. PSU -->
+<section class="module" id="psu">
+  <h2 class="reveal"><svg class="icon"><use href="#i-psu"/></svg>8. Quvvat bloki (PSU)</h2>
+  <p class="reveal">Quvvat bloki 220V o'zgaruvchan tokni komponentlar uchun kerakli past kuchlanishli to'g'ri tokka (12V, 5V, 3.3V) aylantiradi. Eng kam baholanadigan, lekin tizimning eng muhim qismlaridan biri.</p>
+
+  <h3 class="reveal">Quvvatni hisoblash</h3>
+  <p class="reveal">Formula: CPU quvvati + GPU quvvati + 120W (plata, RAM, disk, ventilyatorlar), keyin 20% zaxira.</p>
+  <pre class="reveal">Misol: CPU 125W + GPU 220W + 120W = 465W
+465W × 1.2 ≈ 560W  →  650W tavsiya etiladi</pre>
+
+  <h3 class="reveal">Sifat belgilari</h3>
+  <ul class="clean reveal">
+    <li><b>80 PLUS</b> sertifikati (Bronze, Gold, Platinum) — samaradorlik darajasi.</li>
+    <li><b>Modular</b> — ortiqcha simlarni olib tashlash mumkin, korpus ichi toza.</li>
+    <li><b>Kafolat</b> — sifatli brendlarda 5–10 yil.</li>
+    <li>Noma'lum arzon PSU — eng xavfli tanlov. U boshqa qismlarni ham yo'q qilishi mumkin.</li>
+  </ul>
+  <div class="callout danger reveal"><strong>Xavf</strong>PSU ni ochish mumkin emas — ichida yuqori kuchlanishli kondensatorlar zaryadlangan qolishi mumkin. Shikastlangan PSU ni ta'mirlamang, almashtiring.</div>
+  <label class="done-check"><input type="checkbox" class="modcheck" data-mod="psu"> Bu bo'limni tugatdim</label>
+</section>
+
+<!-- 9. COOLING -->
+<section class="module" id="cooling">
+  <h2 class="reveal"><svg class="icon"><use href="#i-cool"/></svg>9. Sovutish tizimi</h2>
+  <p class="reveal">Issiqlik elektronikaning eng katta dushmani. Haddan ziyod qizigan CPU va GPU tezlikni pasaytiradi (throttling) va vaqt o'tishi bilan eskiradi.</p>
+
+  <div class="tw reveal"><table>
+    <tr><th>Turi</th><th>Afzalligi</th><th>Kamchiligi</th></tr>
+    <tr><td>Havo (tower sovutgich)</td><td>Ishonchli, arzon, xizmat qilish oson</td><td>Katta, ba'zan shovqinli</td></tr>
+    <tr><td>Suyuqlik (AIO 120/240/360 mm)</td><td>Kompakt, sovuq, sokin</td><td>Qimmatroq, nasos nosozligi xavfi</td></tr>
+    <tr><td>Maxsus (custom loop)</td><td>Eng yuqori samaradorlik</td><td>Murakkab, qimmat</td></tr>
+  </table></div>
+
+  <h3 class="reveal">Korpus havo oqimi</h3>
+  <p class="reveal">Oldingi ventilyatorlar sovuq havoni kiritadi, orqa va yuqori ventilyatorlar issiqni chiqaradi. Musbat bosim (kirish > chiqish) — chang kamroq kiradi. Manfiy bosim — issiqlik tez chiqadi, lekin chang ko'proq kiradi.</p>
+
+  <h3 class="reveal">Termal pastani qayta surtish</h3>
+  <ol class="steps reveal">
+    <li>Kompyuterni o'chirib, quvvatni uzing.</li>
+    <li>Sovutgichni CPU dan ehtiyotkorlik bilan ajrating (aylantirib, tortmasdan).</li>
+    <li>Eski pastani spirt va mato bilan to'liq tozalang.</li>
+    <li>Yangi pastani no'xat donasi o'lchamida markazga qo'ying.</li>
+    <li>Sovutgichni diagonal tartibda, teng bosim bilan mahkamlang.</li>
+  </ol>
+  <label class="done-check"><input type="checkbox" class="modcheck" data-mod="cooling"> Bu bo'limni tugatdim</label>
+</section>
+
+<!-- 10. CASE -->
+<section class="module" id="case">
+  <h2 class="reveal"><svg class="icon"><use href="#i-case"/></svg>10. Korpus va kabellar</h2>
+  <p class="reveal">Korpus — hamma narsaning uyi. Yaxshi korpus havo oqimini, kabel boshqaruvini va qismlar hajmiga moslikni ta'minlaydi.</p>
+
+  <h3 class="reveal">Tanlashda tekshiriladigan narsalar</h3>
+  <ul class="clean reveal">
+    <li>Ona plata form-faktori (ATX, Micro-ATX, Mini-ITX) ga mos keladimi.</li>
+    <li>GPU uzunligi va CPU sovutgich balandligi sig'adimi.</li>
+    <li>PSU o'lchami va o'rnatish joyi.</li>
+    <li>Ventilyator o'rnatish joylari va chang filtrlari.</li>
+  </ul>
+
+  <h3 class="reveal">Front panel ulanishlari</h3>
+  <p class="reveal">Ona platada "F_PANEL" deb yozilgan kichik ulagich bor. Unga <code>PWR_SW</code> (quvvat tugmasi), <code>RESET</code>, <code>PWR_LED</code>, <code>HDD_LED</code> ulanadi. Qutblilikka e'tibor bering: musbat (+) va manfiy (−) teskari bo'lsa, ishlamaydi, lekin zarar qilmaydi.</p>
+  <label class="done-check"><input type="checkbox" class="modcheck" data-mod="case"> Bu bo'limni tugatdim</label>
+</section>
+
+<!-- 11. ASSEMBLY -->
+<section class="module" id="yigish">
+  <h2 class="reveal"><svg class="icon"><use href="#i-tools"/></svg>11. PC yig'ish: qadamma-qadam</h2>
+  <p class="reveal">Avval ona plata korpusdan tashqarida tayyorlanadi, keyin korpusga joylanadi. Tekis stol ustida, quruq va yorug' joyda ishlang.</p>
+
+  <h3 class="reveal">1-bosqich: Ona platani tayyorlash</h3>
+  <ol class="steps reveal">
+    <li>Ona platani antistatik paket ustiga qo'ying.</li>
+    <li>CPU ni soketga o'rnating.</li>
+    <li>Sovutgich mounting mexanizmini o'rnating va termal pastani qo'llang.</li>
+    <li>RAM ni dual-channel slotlarga joylang.</li>
+    <li>M.2 SSD ni o'rnating.</li>
+  </ol>
+
+  <h3 class="reveal">2-bosqich: Korpusni tayyorlash</h3>
+  <ol class="steps reveal">
+    <li>Standoff (yostiqcha) vintlarini ona plata form-faktoriga mos joylang.</li>
+    <li>I/O shield (orqa panel plastinkasi) ni korpusga o'rnating.</li>
+    <li>PSU ni mahkamlang.</li>
+  </ol>
+
+  <h3 class="reveal">3-bosqich: Ona platani korpusga o'rnatish</h3>
+  <ol class="steps reveal">
+    <li>Platani I/O shield ga moslab, standoff ustiga qo'ying.</li>
+    <li>Vintlarni ehtiyotkorlik bilan mahkamlang — ortiqcha tortmang, plata egilmasin.</li>
+  </ol>
+
+  <h3 class="reveal">4-bosqich: Asosiy ulanishlar</h3>
+  <ol class="steps reveal">
+    <li>24-pin ATX kabelni ona platadagi katta portga ulang.</li>
+    <li>8-pin CPU quvvat kabelini CPU yaqinidagi portga ulang.</li>
+    <li>GPU ni PCIe x16 ga o'rnatib, PCIe quvvat kabelini ulang.</li>
+    <li>SATA kabellar bilan HDD/SSD ni ulang.</li>
+    <li>Front panel simlarini va korpus fanlarini headerlarga ulang.</li>
+  </ol>
+
+  <h3 class="reveal">5-bosqich: Birinchi ishga tushirish</h3>
+  <ol class="steps reveal">
+    <li>PSU ni rozetkaga ulang va orqa kalitni "I" ga qo'ying.</li>
+    <li>Tugmani bosing. Ventilyatorlar aylanishi va BIOS ekrani chiqishi kerak.</li>
+    <li>Hech narsa bo'lmasa — quvvatni uzing va "Diagnostika" bo'limiga o'ting.</li>
+  </ol>
+  <div class="callout warn reveal"><strong>Maslahat</strong>Birinchi testni korpusni yopmasdan qiling. Xatolar aynan shu bosqichda aniqlanadi.</div>
+  <label class="done-check"><input type="checkbox" class="modcheck" data-mod="yigish"> Bu bo'limni tugatdim</label>
+</section>
+
+<!-- 12. BIOS -->
+<section class="module" id="bios">
+  <h2 class="reveal"><svg class="icon"><use href="#i-bios"/></svg>12. BIOS/UEFI va OS o'rnatish</h2>
+  <p class="reveal">BIOS (zamonaviy UEFI) — kompyuter yonganda birinchi ishga tushadigan dastur. U komponentlarni tekshiradi (POST) va operatsion tizimni yuklaydi.</p>
+
+  <h3 class="reveal">BIOS ga kirish</h3>
+  <p class="reveal">Yonish paytida <code>Del</code>, <code>F2</code>, <code>F10</code> yoki <code>Esc</code> tugmasini bosing (brendga qarab).</p>
+
+  <div class="tw reveal"><table>
+    <tr><th>Sozlama</th><th>Nima qiladi</th></tr>
+    <tr><td>Boot Order</td><td>Qaysi qurilmadan yuklash tartibi</td></tr>
+    <tr><td>XMP / EXPO</td><td>RAM ni e'lon qilingan tezligida ishlatish</td></tr>
+    <tr><td>Secure Boot</td><td>Ishonchsiz dasturlarni to'xtatadi (Windows 11 uchun kerak)</td></tr>
+    <tr><td>VT-x / AMD-V</td><td>Virtualizatsiya uchun (emulyator, WSL)</td></tr>
+    <tr><td>Fan Control</td><td>Ventilyator tezligi va shovqin profili</td></tr>
+    <tr><td>Load Optimized Defaults</td><td>Zavod sozlamalarini tiklaydi (muammoda birinchi qadam)</td></tr>
+  </table></div>
+
+  <h3 class="reveal">OS o'rnatish</h3>
+  <ol class="steps reveal">
+    <li>Rasmiy saytdan installer yaratish vositasini yuklab, 8 GB+ flesh-diskka yozing.</li>
+    <li>Flesh-diskni ulab, Boot Order ni shu diskka o'zgartiring.</li>
+    <li>O'rnatishda diskni formatlab, "Custom" ni tanlang.</li>
+    <li>Drayverlarni (chipset, GPU, Wi-Fi, audio) rasmiy saytdan o'rnating.</li>
+  </ol>
+  <div class="callout reveal"><strong>Drayver tartibi</strong>Avval chipset drayveri, keyin GPU va boshqa qurilmalar. Shunda tizim barqaror ishlaydi.</div>
+  <label class="done-check"><input type="checkbox" class="modcheck" data-mod="bios"> Bu bo'limni tugatdim</label>
+</section>
+
+<!-- 13. DIAGNOSTIKA -->
+<section class="module" id="diagnostika">
+  <h2 class="reveal"><svg class="icon"><use href="#i-diag"/></svg>13. Diagnostika va nosozliklar</h2>
+  <p class="reveal">Usta uchun eng qimmat ko'nikma — muammoni tez va to'g'ri topish. Tartib doim bir xil: <b>kuzatish → taxmin → sinash → tuzatish → tekshirish</b>.</p>
+
+  <div class="callout reveal"><strong>Oltin qoida: bittadan o'zgartiring</strong>Bir vaqtda bir nechta narsani o'zgartirsangiz, qaysi biri muammoni hal qildi yoki buzdi, bilib bo'lmaydi.</div>
+
+  <h3 class="reveal">Belgilar va sabablar</h3>
+  <div class="tw reveal"><table>
+    <tr><th>Belgi</th><th>Ehtimoliy sabab</th><th>Nima qilish</th></tr>
+    <tr><td>Hech narsa yonmaydi</td><td>PSU, tugma, 24-pin</td><td>PSU kalitini va kabellarni tekshiring</td></tr>
+    <tr><td>Ventilyator aylanadi, ekran yo'q</td><td>RAM, GPU, monitor kabeli</td><td>RAM ni birma-bir qayta o'rnating, GPU ni boshqa slotga</td></tr>
+    <tr><td>Bip-signal (ketma-ket)</td><td>RAM yoki GPU</td><td>Ona plata qo'llanmasida bip-kodni toping</td></tr>
+    <tr><td>Tez-tez o'chib qoladi</td><td>Issiqlik, PSU yetarli emas</td><td>Harorat monitoringi, PSU quvvatini tekshiring</td></tr>
+    <tr><td>Ko'k ekran (BSOD)</td><td>Drayver, RAM, disk</td><td>Event Viewer va minidump ni tahlil qiling</td></tr>
+    <tr><td>Disk tezligi past</td><td>HDD eskirgan, SSD to'lgan</td><td>SMART va bo'sh joyni tekshiring</td></tr>
+    <tr><td>Internet uzilib turadi</td><td>Wi-Fi karta, drayver, kabel</td><td>Drayverni yangilang, kabelni almashtiring</td></tr>
+  </table></div>
+
+  <h3 class="reveal">Vositalar</h3>
+  <ul class="clean reveal">
+    <li><b>Memtest86</b> — RAM xatolarini topish (bir necha o'tish).</li>
+    <li><b>HWiNFO</b> — harorat, kuchlanish va sensorlar.</li>
+    <li><b>CrystalDiskInfo</b> — SMART holati.</li>
+    <li><b>Multimetr</b> — PSU kuchlanishlarini tekshirish (12V, 5V, 3.3V).</li>
+    <li><b>Event Viewer</b> — Windows xatolik jurnali.</li>
+  </ul>
+
+  <div class="callout danger reveal"><strong>Ehtiyot</strong>Multimetr bilan faqat ulagichlarning oxirgi nuqtalarida o'lchang. PSU ichki kontaktlariga tegmang.</div>
+
+  <h3 class="reveal">Minimal konfiguratsiya usuli</h3>
+  <ol class="steps reveal">
+    <li>Eng oddiy sababni tekshiring: quvvat, kabel, monitor, klaviatura.</li>
+    <li>Faqat CPU, bitta RAM, GPU (yoki iGPU) va PSU bilan qayta yoqing.</li>
+    <li>Har komponentni ketma-ket qo'shing va har safar sinang.</li>
+    <li>Topilgach, sabab va yechimni yozib qo'ying.</li>
+  </ol>
+  <label class="done-check"><input type="checkbox" class="modcheck" data-mod="diagnostika"> Bu bo'limni tugatdim</label>
+</section>
+
+<!-- 14. USTALIK -->
+<section class="module" id="ustalik">
+  <h2 class="reveal"><svg class="icon"><use href="#i-tools"/></svg>14. Usta yo'li va kasbiy odatlar</h2>
+  <p class="reveal">Texnik bilim — yarmi. Qolgan yarmi — tartib, sabr va mijoz bilan muloqot.</p>
+
+  <div class="grid reveal">
+    <div class="card"><b>Hujjatlash</b><br>Har bir ta'mirni qayd eting: model, seriya raqami, muammo, qilingan ish.</div>
+    <div class="card"><b>Zaxira nusxa</b><br>Mijoz ma'lumotlarini ta'mirdan oldin saqlang, yozma rozilik oling.</div>
+    <div class="card"><b>Oldindan baho</b><br>Kerakli qismlar va taxminiy narxni oldindan ayting.</div>
+    <div class="card"><b>Doimiy o'rganish</b><br>Yangi platformalar, drayverlar va xavfsizlik yangiliklarini kuzating.</div>
+  </div>
+
+  <h3 class="reveal">Yo'l xaritasi</h3>
+  <div class="tw reveal"><table>
+    <tr><th>Bosqich</th><th>Nimani o'zlashtirasiz</th></tr>
+    <tr><td>1. Asos</td><td>1–9 bo'limlar, oddiy yig'ish</td></tr>
+    <tr><td>2. Amaliyot</td><td>10 ta turli PC yig'ish, BIOS, OS o'rnatish</td></tr>
+    <tr><td>3. Diagnostika</td><td>Multimetr, PSU testi, sovutish va termal muammolar</td></tr>
+    <tr><td>4. Ta'mir</td><td>Ona plata darajasida xatolar, lehimlash asoslari</td></tr>
+    <tr><td>5. Mutaxassislik</td><td>Server, tarmoq, noutbuk, ma'lumotlarni tiklash</td></tr>
+  </table></div>
+
+  <div class="callout warn reveal"><strong>Eng muhim maslahat</strong>Har bir komponent ustida ishlashdan oldin uning rasmiy qo'llanmasini o'qing.</div>
+  <label class="done-check"><input type="checkbox" class="modcheck" data-mod="ustalik"> Bu bo'limni tugatdim</label>
+</section>
+
+<!-- 15. GLOSSARY -->
+<section class="module" id="glossary">
+  <h2 class="reveal"><svg class="icon"><use href="#i-book"/></svg>15. Glossariy</h2>
+  <p class="reveal">Ustaning tili — qisqartmalar. Asosiy atamalar:</p>
+  <div class="tw reveal"><table>
+    <tr><th>Atama</th><th>Ma'nosi</th></tr>
+    <tr><td>BIOS / UEFI</td><td>Kompyuterning dastlabki ishga tushirish dasturi</td></tr>
+    <tr><td>POST</td><td>Power-On Self-Test: yonganda komponentlarni tekshirish</td></tr>
+    <tr><td>DIMM</td><td>Desktop RAM modulining fizik turi</td></tr>
+    <tr><td>PCIe</td><td>Yuqori tezlikli kengaytma shinasi</td></tr>
+    <tr><td>NVMe</td><td>SSD uchun tezkor protokol (PCIe orqali)</td></tr>
+    <tr><td>SATA</td><td>An'anaviy disk ulanish interfeysi</td></tr>
+    <tr><td>TDP</td><td>Thermal Design Power: issiqlik tarqatish me'yori</td></tr>
+    <tr><td>Throttling</td><td>Qizish tufayli tezlikni pasaytirish</td></tr>
+    <tr><td>XMP / EXPO</td><td>RAM ni tezlashtirilgan profilda ishlatish</td></tr>
+    <tr><td>VRAM</td><td>Video karta xotirasi</td></tr>
+    <tr><td>PSU</td><td>Power Supply Unit: quvvat bloki</td></tr>
+    <tr><td>80 PLUS</td><td>Quvvat bloki samaradorlik sertifikati</td></tr>
+    <tr><td>SMART</td><td>Diskning o'z-o'zini kuzatish tizimi</td></tr>
+    <tr><td>BSOD</td><td>Blue Screen of Death: jiddiy tizim xatoligi</td></tr>
+    <tr><td>Standoff</td><td>Ona platani korpusdan ajratib turuvchi tayanch</td></tr>
+    <tr><td>I/O shield</td><td>Ona plataning orqa portlarini yopuvchi plastina</td></tr>
+    <tr><td>ESD</td><td>Electrostatic Discharge: statik zaryad</td></tr>
+    <tr><td>Form-faktor</td><td>Plata yoki korpusning standart o'lchami (ATX, mATX, ITX)</td></tr>
+    <tr><td>Chipset</td><td>Plataning komponentlar o'rtasidagi aloqa boshqaruvchisi</td></tr>
+    <tr><td>Kesh</td><td>CPU ichidagi juda tez xotira</td></tr>
+    <tr><td>TDP</td><td>Issiqlik tarqatish me'yori (qarang: Thermal Design Power)</td></tr>
+    <tr><td>Overclock</td><td>Komponentni tezligini rasmiy chegaradan oshirish</td></tr>
+    <tr><td>Drayver</td><td>Apparatni tizim bilan bog'lovchi dastur</td></tr>
+  </table></div>
+  <label class="done-check"><input type="checkbox" class="modcheck" data-mod="glossary"> Bu bo'limni tugatdim</label>
+</section>
+
+<!-- 16. TEST -->
+<section class="module" id="test">
+  <h2 class="reveal"><svg class="icon"><use href="#i-diag"/></svg>16. Bilim testi</h2>
+  <p class="reveal">Har bir to'g'ri javob — bitta ball.</p>
+
+  <div class="quiz card reveal" id="quiz">
+    <div class="q" data-answer="1">
+      <b>1. DDR4 modulini DDR5 slotiga o'rnatish mumkinmi?</b>
+      <label><input type="radio" name="q1" value="0"> Ha, agar chastota mos bo'lsa</label>
+      <label><input type="radio" name="q1" value="1"> Yo'q, fizik jihatdan mos kelmaydi</label>
+      <label><input type="radio" name="q1" value="2"> Faqat BIOS da sozlab</label>
+    </div>
+    <div class="q" data-answer="2">
+      <b>2. 465W tizim uchun qaysi PSU tavsiya etiladi (zaxira bilan)?</b>
+      <label><input type="radio" name="q2" value="0"> 300W</label>
+      <label><input type="radio" name="q2" value="1"> 450W</label>
+      <label><input type="radio" name="q2" value="2"> 650W</label>
+    </div>
+    <div class="q" data-answer="0">
+      <b>3. Yonib turgan kompyuter ichiga tegishdan oldin nima qilish kerak?</b>
+      <label><input type="radio" name="q3" value="0"> Quvvatni uzish va statik zaryadni tushirish</label>
+      <label><input type="radio" name="q3" value="1"> Faqat monitorni o'chirish</label>
+      <label><input type="radio" name="q3" value="2"> Hech narsa, xavfsiz</label>
+    </div>
+    <div class="q" data-answer="1">
+      <b>4. Bip-signallar takrorlanib, ekran bo'lmasa, eng ehtimoliy sabab?</b>
+      <label><input type="radio" name="q4" value="0"> Klaviatura</label>
+      <label><input type="radio" name="q4" value="1"> RAM yoki GPU</label>
+      <label><input type="radio" name="q4" value="2"> Korpus rangi</label>
+    </div>
+    <div class="q" data-answer="0">
+      <b>5. Termal pastani to'g'ri qo'llash qanday?</b>
+      <label><input type="radio" name="q5" value="0"> No'xat donasi o'lchamida, markazga</label>
+      <label><input type="radio" name="q5" value="1"> Butun CPU yuzasiga qalin qatlam</label>
+      <label><input type="radio" name="q5" value="2"> Sovutgichga emas, CPU ga surtish shart emas</label>
+    </div>
+    <div class="q" data-answer="2">
+      <b>6. Kundalik ish uchun eng yaxshi narx/sifat nisbatiga ega chipset seriyasi?</b>
+      <label><input type="radio" name="q6" value="0"> Z seriya</label>
+      <label><input type="radio" name="q6" value="1"> X seriya</label>
+      <label><input type="radio" name="q6" value="2"> B seriya</label>
+    </div>
+  </div>
+  <button class="checkbox checkbtn" id="checkQuiz" style="padding:11px 18px;margin-top:6px">Javoblarni tekshirish</button>
+  <div class="result" id="quizResult"></div>
+  <label class="done-check"><input type="checkbox" class="modcheck" data-mod="test"> Bu bo'limni tugatdim</label>
+</section>
+
+<!-- 17. GAME -->
+<section class="module" id="oyin">
+  <h2 class="reveal"><svg class="icon"><use href="#i-game"/></svg>17. PC Usta — yig'ish o'yini</h2>
+  <p class="reveal">Har bosqichda komponentni tanlab, "Ulash" tugmasini bosing. Mos bo'lmasa, tizim sababini aytadi va bitta "hayot" ketadi. 3 ta hayotingiz bor. Oxirida PC ning xarakteristikasi va rasmi chiqadi — uni ulashishingiz mumkin.</p>
+
+  <!-- start screen -->
+  <div id="gStart" class="game-start reveal">
+    <svg class="icon-lg" style="margin:0 auto 12px;display:block"><use href="#i-cpu"/></svg>
+    <h3 style="font-size:1.5rem;margin-top:0">Tayyor bo'lsangiz, boshlang</h3>
+    <p class="lead" style="margin:0 auto 16px">Protsessordan boshlab korpusgacha 8 ta komponentni tanlaysiz. Haqiqiy usta kabi o'ylab tanlang: soket, xotira turi, sovutgich, uzunlik va quvvat.</p>
+    <button class="cta" id="gBegin">▶ O'yinni boshlash</button>
+    <div class="best" id="bestTxt"></div>
+  </div>
+
+  <!-- game -->
+  <div id="gGame" class="hidden">
+    <div class="hud">
+      <span>Hayot: <span class="hearts" id="lives">♥♥♥</span></span>
+      <span>Ball: <b id="score">1000</b></span>
+      <span>Qadam: <b id="stepN">1/8</b></span>
+      <span style="margin-left:auto"><button id="gReset">Qayta boshlash</button></span>
+    </div>
+    <div class="game-grid">
+      <div class="stage" id="stage">
+        <svg id="previewSvg" viewBox="0 0 480 320" aria-label="Yig'ilayotgan PC"></svg>
+        <ul class="built-list" id="builtList"></ul>
+      </div>
+      <div class="shop">
+        <h3 class="slot-title" id="slotTitle"></h3>
+        <div class="slot-hint" id="slotHint"></div>
+        <div class="opts" id="opts"></div>
+        <div class="msg" id="msg"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- final -->
+  <div id="gFinal" class="final hidden"></div>
+</section>
+
+</main>
+</div>
+
+<footer>PC Usta — o'rganish uchun ochiq qo'llanma. Progress va eng yaxshi ball brauzeringizda saqlanadi.</footer>
+
+<!-- Game over overlay -->
+<div class="overlay hidden" id="over">
+  <div class="box">
+    <svg class="icon-lg" style="margin:0 auto 10px;display:block;color:var(--danger)"><use href="#i-psu"/></svg>
+    <h3 style="color:var(--danger);margin-top:0">PC yonib ketdi!</h3>
+    <p id="overTxt">Hayotlaringiz tugadi. Xatolardan saboq oling va qayta urinib ko'ring.</p>
+    <button class="cta" id="overBtn">Qayta boshlash</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  /* ---------- Reveal + counters ---------- */
+  const io = new IntersectionObserver(function(entries){
+    entries.forEach(function(e){
+      if(e.isIntersecting){ e.target.classList.add("in"); io.unobserve(e.target); }
+    });
+  },{threshold:.12});
+  document.querySelectorAll(".reveal").forEach(function(el){ io.observe(el); });
+
+  const cIo = new IntersectionObserver(function(entries){
+    entries.forEach(function(e){
+      if(!e.isIntersecting) return;
+      const el = e.target, end = +el.dataset.count; let n = 0;
+      const step = Math.max(1, Math.round(end/30));
+      const t = setInterval(function(){ n += step; if(n>=end){ n=end; clearInterval(t);} el.textContent = n; }, 40);
+      cIo.unobserve(el);
+    });
+  },{threshold:.5});
+  document.querySelectorAll("[data-count]").forEach(function(el){ cIo.observe(el); });
+
+  /* ---------- Progress ---------- */
+  const KEY="pcusta-progress-v2", THEME="pcusta-theme", BEST="pcusta-best-v1";
+  const checks = Array.from(document.querySelectorAll(".modcheck"));
+  let state={}; try{ state=JSON.parse(localStorage.getItem(KEY))||{}; }catch(e){}
+  function renderProgress(){
+    let done=0;
+    checks.forEach(function(c){
+      c.checked=!!state[c.dataset.mod];
+      if(state[c.dataset.mod]) done++;
+      const link=document.querySelector('nav.side a[href="#'+c.dataset.mod+'"]');
+      if(link) link.parentElement.classList.toggle("done",!!state[c.dataset.mod]);
+    });
+    const pct=checks.length?Math.round(done/checks.length*100):0;
+    document.getElementById("progressBar").style.width=pct+"%";
+    document.getElementById("progressText").textContent=pct+"%";
+  }
+  checks.forEach(function(c){
+    c.addEventListener("change",function(){
+      state[c.dataset.mod]=c.checked;
+      try{ localStorage.setItem(KEY,JSON.stringify(state)); }catch(e){}
+      renderProgress();
+    });
+  });
+  renderProgress();
+
+  /* ---------- Sidebar active + mobile + search ---------- */
+  const links=Array.from(document.querySelectorAll("nav.side a"));
+  const aIo=new IntersectionObserver(function(entries){
+    entries.forEach(function(e){
+      if(e.isIntersecting) links.forEach(function(l){ l.classList.toggle("active", l.getAttribute("href")==="#"+e.target.id); });
+    });
+  },{rootMargin:"-40% 0px -55% 0px"});
+  document.querySelectorAll("section.module").forEach(function(s){ aIo.observe(s); });
+
+  const side=document.getElementById("sidenav");
+  document.getElementById("menuBtn").addEventListener("click",function(){ side.classList.toggle("open"); });
+  side.addEventListener("click",function(e){ if(e.target.tagName==="A") side.classList.remove("open"); });
+
+  document.getElementById("search").addEventListener("input",function(){
+    const q=this.value.trim().toLowerCase();
+    document.querySelectorAll("nav.side li").forEach(function(li){
+      li.style.display=(!q||li.textContent.toLowerCase().includes(q))?"":"none";
+    });
+  });
+
+  /* ---------- Theme ---------- */
+  const root=document.documentElement;
+  try{ const t=localStorage.getItem(THEME); if(t) root.setAttribute("data-theme",t); }catch(e){}
+  document.getElementById("themeBtn").addEventListener("click",function(){
+    const next=root.getAttribute("data-theme")==="light"?"dark":"light";
+    root.setAttribute("data-theme",next);
+    try{ localStorage.setItem(THEME,next); }catch(e){}
+  });
+
+  /* ---------- Quiz ---------- */
+  document.getElementById("checkQuiz").addEventListener("click",function(){
+    const qs=Array.from(document.querySelectorAll("#quiz .q"));
+    let score=0;
+    qs.forEach(function(q){
+      const name=q.querySelector("input").name;
+      const chosen=document.querySelector('input[name="'+name+'"]:checked');
+      const ok=chosen&&chosen.value===q.dataset.answer;
+      if(ok) score++;
+      q.style.outline=chosen?(ok?"2px solid var(--accent)":"2px solid var(--danger)"):"none";
+      q.style.borderRadius="12px";
+    });
+    document.getElementById("quizResult").textContent="Natija: "+score+" / "+qs.length+
+      (score===qs.length?" — a'lo! Endi o'yinga o'ting.":score>=qs.length/2?" — yaxshi. Xato bo'limlarni qayta o'qing.":" — qayta o'qib, yana urinib ko'ring.");
+  });
+
+  /* ============================================================
+     GAME — PC USTA
+     ============================================================ */
+  const PARTS = {
+    cpu:[
+      {id:"c1",name:"Vortex 5 Lite",socket:"AM5",tdp:65,perf:60,price:120,desc:"6 yadro · AM5 · 65W"},
+      {id:"c2",name:"Vortex 7 Pro",socket:"AM5",tdp:105,perf:88,price:320,desc:"8 yadro · AM5 · 105W"},
+      {id:"c3",name:"Kestrel i5-X",socket:"LGA1700",tdp:65,perf:62,price:130,desc:"6 yadro · LGA1700 · 65W"},
+      {id:"c4",name:"Kestrel i7-Z",socket:"LGA1700",tdp:125,perf:92,price:360,desc:"12 yadro · LGA1700 · 125W"},
+      {id:"c5",name:"Relic Core 2",socket:"AM3+",tdp:95,perf:30,price:40,desc:"4 yadro · AM3+ · 95W · eski"}
+    ],
+    mobo:[
+      {id:"m1",name:"Vortex B650 ATX",socket:"AM5",mem:"DDR5",form:"ATX",m2:true,price:150,desc:"AM5 · DDR5 · ATX · M.2 bor"},
+      {id:"m2",name:"Vortex B650M",socket:"AM5",mem:"DDR5",form:"mATX",m2:true,price:120,desc:"AM5 · DDR5 · mATX · M.2 bor"},
+      {id:"m3",name:"Kestrel Z790 ATX",socket:"LGA1700",mem:"DDR5",form:"ATX",m2:true,price:210,desc:"LGA1700 · DDR5 · ATX · M.2 bor"},
+      {id:"m4",name:"Kestrel B660 ITX",socket:"LGA1700",mem:"DDR4",form:"ITX",m2:true,price:110,desc:"LGA1700 · DDR4 · ITX · M.2 bor"},
+      {id:"m5",name:"Relic A320 ATX",socket:"AM3+",mem:"DDR3",form:"ATX",m2:false,price:70,desc:"AM3+ · DDR3 · ATX · M.2 yo'q"}
+    ],
+    ram:[
+      {id:"r1",name:"16GB DDR5 6000",mem:"DDR5",perf:18,price:55,desc:"DDR5 · 16 GB · 6000 MT/s"},
+      {id:"r2",name:"32GB DDR5 6400",mem:"DDR5",perf:28,price:110,desc:"DDR5 · 32 GB · 6400 MT/s"},
+      {id:"r3",name:"16GB DDR4 3200",mem:"DDR4",perf:14,price:40,desc:"DDR4 · 16 GB · 3200 MT/s"},
+      {id:"r4",name:"8GB DDR3 1600",mem:"DDR3",perf:6,price:20,desc:"DDR3 · 8 GB · 1600 MT/s"}
+    ],
+    cooler:[
+      {id:"k1",name:"Tower Air 120",sockets:["AM5","LGA1700","AM3+"],cap:150,price:40,desc:"Havo · 150W · hamma soketlar"},
+      {id:"k2",name:"Slim Air 60",sockets:["AM5","LGA1700"],cap:65,price:25,desc:"Havo · 65W · AM5/LGA1700"},
+      {id:"k3",name:"AIO 240",sockets:["AM5","LGA1700","AM3+"],cap:260,price:120,desc:"Suyuqlik · 260W · hamma soketlar"}
+    ],
+    gpu:[
+      {id:"g1",name:"Vortex RX 7600",len:240,tdp:165,perf:58,price:280,desc:"8 GB · 240 mm · 165W"},
+      {id:"g2",name:"Vortex RX 7900",len:300,tdp:300,perf:88,price:650,desc:"16 GB · 300 mm · 300W"},
+      {id:"g3",name:"Kestrel G-4060",len:210,tdp:115,perf:52,price:260,desc:"8 GB · 210 mm · 115W"},
+      {id:"g4",name:"Kestrel G-4090X",len:336,tdp:450,perf:100,price:1600,desc:"24 GB · 336 mm · 450W"}
+    ],
+    storage:[
+      {id:"s1",name:"SATA SSD 500GB",iface:"SATA",perf:40,price:45,desc:"SATA · ~500 MB/s"},
+      {id:"s2",name:"NVMe SSD 1TB",iface:"M.2",perf:80,price:90,desc:"M.2 NVMe · ~5000 MB/s"},
+      {id:"s3",name:"HDD 2TB",iface:"SATA",perf:12,price:50,desc:"SATA HDD · ~150 MB/s"},
+      {id:"s4",name:"NVMe Gen5 2TB",iface:"M.2",perf:96,price:220,desc:"M.2 Gen5 · ~12000 MB/s"}
+    ],
+    case:[
+      {id:"x1",name:"Mini Cube",forms:["ITX"],maxGpu:260,color:"#3a4252",price:60,desc:"ITX · GPU ≤ 260 mm"},
+      {id:"x2",name:"Mid Tower mATX",forms:["mATX","ITX"],maxGpu:300,color:"#2b3a4f",price:80,desc:"mATX/ITX · GPU ≤ 300 mm"},
+      {id:"x3",name:"Full Tower ATX",forms:["ATX","mATX","ITX"],maxGpu:380,color:"#1f2a38",price:130,desc:"Hammasi · GPU ≤ 380 mm"}
+    ],
+    psu:[
+      {id:"p1",name:"450W Bronze",w:450,price:50,desc:"450W · Bronze"},
+      {id:"p2",name:"650W Gold",w:650,price:95,desc:"650W · Gold · modular"},
+      {id:"p3",name:"850W Gold",w:850,price:130,desc:"850W · Gold · modular"},
+      {id:"p4",name:"No-name 750W",w:750,price:35,risky:true,desc:"750W · noma'lum brend"}
+    ]
+  };
+
+  const SLOTS=[
+    {key:"cpu",title:"1. Protsessor (CPU)",hint:"Soket ona plata bilan mos bo'lishi shart."},
+    {key:"mobo",title:"2. Ona plata",hint:"Soket CPU bilan, xotira turi RAM bilan mos bo'lsin."},
+    {key:"ram",title:"3. Operativ xotira",hint:"Plata qabul qiladigan xotira turini tanlang."},
+    {key:"cooler",title:"4. Sovutgich",hint:"Soketni qo'llab-quvvatlashi va CPU issiqligini yengishi kerak."},
+    {key:"gpu",title:"5. Video karta",hint:"Uzunligi va quvvat sarfi hisobga olinadi (keyingi qadamlarda)."},
+    {key:"storage",title:"6. Saqlagich",hint:"NVMe disk M.2 slot talab qiladi."},
+    {key:"case",title:"7. Korpus",hint:"Plata shakli sig'sin va video karta uzunligi sig'sin."},
+    {key:"psu",title:"8. Quvvat bloki",hint:"Quvvat yetarlimi? Hisob: CPU + GPU + 120W, zaxira 20%."}
+  ];
+
+  const CASE_COLORS = {x1:"#3a4252",x2:"#2b3a4f",x3:"#1f2a38"};
+  const MEM_COLOR = {DDR5:"#5d8dff",DDR4:"#2ee6b0",DDR3:"#ffb545"};
+
+  let game=null;
+  function newGame(){
+    return {step:0,lives:3,score:1000,build:{},penalties:0};
+  }
+  function fmt(n){ return "$"+n; }
+
+  function err(msg,tip){ return {ok:false,msg:msg,tip:tip}; }
+
+  function check(key,p){
+    const b=game.build;
+    switch(key){
+      case "mobo":
+        if(p.socket!==b.cpu.socket) return err("Soket mos emas: protsessor "+b.cpu.socket+", ona plata "+p.socket+".","CPU va ona plata soketi bir xil bo'lishi shart. Soket — mos kelmasa, CPU o'rnatilmaydi.");
+        break;
+      case "ram":
+        if(p.mem!==b.mobo.mem) return err("Xotira turi mos emas: ona plata "+b.mobo.mem+" ni qabul qiladi, siz "+p.mem+" tanladingiz.","DDR3, DDR4 va DDR5 fizik jihatdan mos emas — slot va o'yiq boshqacha. Ona plata qo'llanmasiga qarang.");
+        break;
+      case "cooler":
+        if(p.sockets.indexOf(b.cpu.socket)<0) return err("Sovutgich "+b.cpu.socket+" soketini qo'llab-quvvatlamaydi.","Sovutgich qutisidagi soket ro'yxatini tekshiring.");
+        if(p.cap<b.cpu.tdp) return err("Sovutgich yetarli emas: CPU ("+b.cpu.tdp+"W) issiqligini yengolmaydi.","Sovutgich quvvati CPU TDP dan kam bo'lmasligi kerak, aks holda throttling bo'ladi.");
+        break;
+      case "storage":
+        if(p.iface==="M.2" && !b.mobo.m2) return err("Ona platada M.2 slot yo'q.","NVMe SSD faqat M.2 slot bor platalarga ulanadi. SATA disk esa SATA portga.");
+        break;
+      case "case":
+        if(p.forms.indexOf(b.mobo.form)<0) return err("Korpus "+b.mobo.form+" platani sig'dirmaydi.","Korpus form-faktori ona platadan katta bo'lishi kerak. ATX plata — mini-ITX korpusga sig'maydi.");
+        if(p.maxGpu<b.gpu.len) return err("Video karta ("+b.gpu.len+" mm) korpusga sig'maydi.","Korpus qo'llanmasidagi maksimal GPU uzunligini tekshiring.");
+        break;
+      case "psu":
+        const need=b.cpu.tdp+b.gpu.tdp+120;
+        const req=Math.ceil(need*1.2);
+        if(p.w<req) return err("Quvvat yetarli emas: taxminan "+req+"W kerak, sizda "+p.w+"W.","Quvvat bloki yetmasa, tizim o'chib qoladi. Formula: CPU + GPU + 120W, zaxira bilan 20%.");
+        if(p.risky) return {ok:true,warn:"Ishonchsiz brend: noma'lum PSU boshqa qismlarni ham yo'q qilishi mumkin. Ball −100."};
+        break;
+    }
+    return {ok:true};
+  }
+
+  function specText(key,p){ return p.desc || ""; }
+
+  function renderOptions(){
+    const slot=SLOTS[game.step];
+    document.getElementById("slotTitle").textContent=slot.title;
+    document.getElementById("slotHint").textContent=slot.hint;
+    const wrap=document.getElementById("opts");
+    wrap.innerHTML="";
+    PARTS[slot.key].forEach(function(p){
+      const card=document.createElement("div");
+      card.className="opt";
+      const h=document.createElement("h4"); h.textContent=p.name;
+      const sp=document.createElement("div"); sp.className="sp"; sp.textContent=specText(slot.key,p);
+      const pr=document.createElement("div"); pr.className="pr"; pr.textContent=fmt(p.price);
+      const btn=document.createElement("button"); btn.textContent="Ulash";
+      btn.addEventListener("click",function(){ attempt(p,card); });
+      card.appendChild(h); card.appendChild(sp); card.appendChild(pr); card.appendChild(btn);
+      wrap.appendChild(card);
+    });
+    document.getElementById("stepN").textContent=(game.step+1)+"/"+SLOTS.length;
+    document.getElementById("lives").textContent="♥".repeat(game.lives)+"♡".repeat(3-game.lives);
+    document.getElementById("score").textContent=game.score;
+  }
+
+  function showMsg(kind,text,tip){
+    const m=document.getElementById("msg");
+    m.className="msg show "+kind;
+    m.innerHTML="";
+    const t=document.createElement("b"); t.textContent=text;
+    m.appendChild(t);
+    if(tip){ const d=document.createElement("div"); d.style.marginTop="6px"; d.style.color="var(--muted)"; d.textContent="💡 "+tip; m.appendChild(d); }
+  }
+
+  function attempt(p,card){
+    const slot=SLOTS[game.step];
+    const res=check(slot.key,p);
+    if(!res.ok){
+      game.lives--; game.score-=100;
+      card.classList.remove("shake"); void card.offsetWidth; card.classList.add("shake");
+      showMsg("err","❌ "+res.msg,res.tip);
+      renderOptions();
+      if(game.lives<=0){ return gameOver(); }
+      showMsg("err","❌ "+res.msg,res.tip);
+      return;
+    }
+    game.build[slot.key]=p;
+    if(res.warn){ game.score-=100; game.penalties++; showMsg("warn","⚠️ "+p.name+" ulandi. "+res.warn); }
+    else showMsg("ok","✅ "+p.name+" to'g'ri ulandi!");
+    game.step++;
+    drawPreview(false);
+    if(game.step>=SLOTS.length){ return finish(); }
+    renderOptions();
+    updateBuiltList();
+  }
+
+  function updateBuiltList(){
+    const ul=document.getElementById("builtList");
+    ul.innerHTML="";
+    SLOTS.forEach(function(s){
+      const li=document.createElement("li");
+      const p=game.build[s.key];
+      const b=document.createElement("b"); b.textContent=s.title.replace(/^\d+\.\s*/,"")+": ";
+      li.appendChild(b);
+      li.appendChild(document.createTextNode(p?p.name:"—"));
+      ul.appendChild(li);
+    });
+  }
+
+  function svgEl(tag,attrs,parent){
+    const e=document.createElementNS("http://www.w3.org/2000/svg",tag);
+    Object.keys(attrs).forEach(function(k){ e.setAttribute(k,attrs[k]); });
+    if(parent) parent.appendChild(e);
+    return e;
+  }
+
+  function drawPC(b,svg,final){
+    svg.innerHTML="";
+    const ns="http://www.w3.org/2000/svg";
+    const caseColor=b.case?b.case.color:"transparent";
+    const dashed=!b.case;
+    // case
+    svgEl("rect",{x:20,y:14,width:440,height:290,rx:16,fill:caseColor,stroke:dashed?"#5a6878":"#7fd9c4","stroke-width":dashed?2:3,"stroke-dasharray":dashed?"8 8":"0"},svg);
+    // side window
+    if(b.case){
+      svgEl("rect",{x:300,y:40,width:140,height:190,rx:8,fill:"#0c1a24",opacity:.5},svg);
+    }
+    // mobo
+    const isITX=b.mobo&&b.mobo.form==="ITX", isM=b.mobo&&b.mobo.form==="mATX";
+    const mw=isITX?170:(isM?230:300), mh=isITX?170:(isM?230:260);
+    const mx=40, my=40;
+    if(b.mobo){
+      svgEl("rect",{x:mx,y:my,width:mw,height:mh,rx:6,fill:"#1b5e4a",stroke:"#2ee6b0","stroke-width":2},svg);
+    } else {
+      svgEl("rect",{x:mx,y:my,width:mw,height:mh,rx:6,fill:"none",stroke:"#5a6878","stroke-dasharray":"8 8"},svg);
+    }
+    // CPU + cooler
+    const cx=mx+30, cy=my+30;
+    if(b.cpu){
+      if(b.cooler){ svgEl("circle",{cx:cx+22,cy:cy+22,r:34,fill:"none",stroke:"#9fb0c2","stroke-width":5,opacity:.8},svg); }
+      svgEl("rect",{x:cx,y:cy,width:44,height:44,rx:3,fill:"#c9a24a"},svg);
+      svgEl("rect",{x:cx+8,y:cy+8,width:28,height:28,rx:2,fill:"#8a6d2b"},svg);
+    }
+    // RAM
+    if(b.ram){
+      const col=MEM_COLOR[b.ram.mem]||"#888";
+      const rx=mx+mw-60;
+      svgEl("rect",{x:rx,y:my+20,width:10,height:110,rx:2,fill:col},svg);
+      svgEl("rect",{x:rx+18,y:my+20,width:10,height:110,rx:2,fill:col},svg);
+    } else if(b.mobo){
+      svgEl("rect",{x:mx+mw-60,y:my+20,width:10,height:110,rx:2,fill:"none",stroke:"#5a6878","stroke-dasharray":"4 4"},svg);
+    }
+    // GPU
+    if(b.gpu){
+      const gl=Math.min(b.gpu.len/1.25,300);
+      svgEl("rect",{x:mx+20,y:my+mh-70,width:gl,height:44,rx:6,fill:"#2a2f3a",stroke:"#ff5d6c","stroke-width":2},svg);
+      svgEl("circle",{cx:mx+20+gl*0.3,cy:my+mh-48,r:12,fill:"none",stroke:"#8fa0b3","stroke-width":3},svg);
+      svgEl("circle",{cx:mx+20+gl*0.7,cy:my+mh-48,r:12,fill:"none",stroke:"#8fa0b3","stroke-width":3},svg);
+    }
+    // storage
+    if(b.storage){
+      svgEl("rect",{x:330,y:200,width:90,height:20,rx:4,fill:"#5d8dff"},svg);
+    }
+    // PSU
+    if(b.psu){
+      svgEl("rect",{x:300,y:250,width:140,height:40,rx:6,fill:"#0d1218",stroke:"#8fa0b3"},svg);
+      svgEl("circle",{cx:350,cy:270,r:9,fill:"none",stroke:"#2ee6b0","stroke-width":2},svg);
+    } else {
+      svgEl("rect",{x:300,y:250,width:140,height:40,rx:6,fill:"none",stroke:"#5a6878","stroke-dasharray":"6 6"},svg);
+    }
+    // labels
+    if(final && b.case){
+      const t=svgEl("text",{x:240,y:330,"text-anchor":"middle",fill:"#8fa0b3","font-size":12,"font-family":"monospace"},svg);
+      t.textContent=b.case.name+" · "+(b.cpu?b.cpu.name:"")+" · "+(b.gpu?b.gpu.name:"");
+    }
+  }
+
+  function drawPreview(final){
+    drawPC(game.build,document.getElementById("previewSvg"),final);
+    const pv=document.getElementById("previewSvg");
+    pv.classList.remove("flash"); void pv.getBoundingClientRect(); pv.classList.add("flash");
+  }
+
+  function gameOver(){
+    document.getElementById("overTxt").textContent="Hayotlaringiz tugadi. Ball: "+game.score+". Xatolardan saboq oling va qayta urinib ko'ring.";
+    document.getElementById("over").classList.remove("hidden");
+  }
+
+  function totals(b){
+    const perf=(b.cpu.perf)+(b.gpu.perf)+(b.ram.perf)+(b.storage.perf*0.5);
+    const price=Object.keys(b).reduce(function(s,k){ return s+(b[k]&&b[k].price?b[k].price:0); },0);
+    return {perf:perf,price:price};
+  }
+
+  function ratingOf(score){
+    if(score>=900) return {r:"S",t:"Haqiqiy usta! Hech qanday xatosiz yoki deyarli xatosiz."};
+    if(score>=700) return {r:"A",t:"Juda yaxshi. Bir-ikki xato bilan yakunladingiz."};
+    if(score>=500) return {r:"B",t:"Yaxshi. Soket va quvvat qoidalarini yana bir bor o'qing."};
+    return {r:"C",t:"Yo'lning boshidasiz. Bo'limlarni qayta o'qing va yana urinib ko'ring."};
+  }
+
+  function finish(){
+    const b=game.build, tt=totals(b), rt=ratingOf(game.score);
+    document.getElementById("gGame").classList.add("hidden");
+    const fin=document.getElementById("gFinal");
+    fin.classList.remove("hidden");
+    fin.innerHTML="";
+
+    const wrapTitle=document.createElement("div");
+    wrapTitle.innerHTML="<div style='text-align:center;color:var(--muted)'>Yakuniy reyting</div>";
+    const rating=document.createElement("div"); rating.className="rating"; rating.textContent=rt.r;
+    const sub=document.createElement("p"); sub.style.textAlign="center"; sub.textContent=rt.t;
+    fin.appendChild(wrapTitle); fin.appendChild(rating); fin.appendChild(sub);
+
+    const grid=document.createElement("div"); grid.className="final-grid";
+    const svgBox=document.createElement("div");
+    const svg=svgEl("svg",{viewBox:"0 0 480 340",id:"finalSvg"});
+    svgBox.appendChild(svg);
+    drawPC(b,svg,true);
+
+    const specBox=document.createElement("div");
+    const rows=[
+      ["Protsessor",b.cpu.name],["Ona plata",b.mobo.name],["Xotira",b.ram.name],
+      ["Sovutgich",b.cooler.name],["Video karta",b.gpu.name],["Saqlagich",b.storage.name],
+      ["Korpus",b.case.name],["Quvvat bloki",b.psu.name]
+    ];
+    const tw=document.createElement("div"); tw.className="tw";
+    const tbl=document.createElement("table");
+    rows.forEach(function(r){
+      const tr=document.createElement("tr");
+      const a=document.createElement("td"); a.textContent=r[0]; a.style.color="var(--muted)";
+      const c=document.createElement("td"); c.textContent=r[1];
+      tr.appendChild(a); tr.appendChild(c); tbl.appendChild(tr);
+    });
+    tw.appendChild(tbl); specBox.appendChild(tw);
+
+    const stat=document.createElement("div");
+    stat.innerHTML="<div class='label-row'><span>Unumdorlik indeksi</span><b>"+Math.round(tt.perf)+"</b></div>"+
+      "<div class='spec-bar'><i style='width:0' data-w='"+Math.min(100,Math.round(tt.perf/3))+"%'></i></div>"+
+      "<div class='label-row'><span>Taxminiy narx</span><b>$"+tt.price+"</b></div>"+
+      "<div class='label-row'><span>Ball</span><b>"+game.score+"</b></div>";
+    specBox.appendChild(stat);
+
+    grid.appendChild(svgBox); grid.appendChild(specBox);
+    fin.appendChild(grid);
+
+    const actions=document.createElement("div"); actions.className="actions";
+    const shareBtn=document.createElement("button"); shareBtn.className="cta"; shareBtn.textContent="📤 Ulashish";
+    const dlBtn=document.createElement("button"); dlBtn.textContent="🖼 Rasmni yuklash";
+    const againBtn=document.createElement("button"); againBtn.textContent="🔁 Qayta yig'ish";
+    actions.appendChild(shareBtn); actions.appendChild(dlBtn); actions.appendChild(againBtn);
+    fin.appendChild(actions);
+
+    const text="PC Usta: men "+rt.r+" reyting bilan PC yig'dim! Ball: "+game.score+
+      ", unumdorlik: "+Math.round(tt.perf)+", CPU: "+b.cpu.name+", GPU: "+b.gpu.name+". Sen ham urinib ko'r!";
+    shareBtn.addEventListener("click",function(){
+      if(navigator.share){ navigator.share({title:"PC Usta",text:text}).catch(function(){}); }
+      else if(navigator.clipboard){ navigator.clipboard.writeText(text).then(function(){ shareBtn.textContent="✅ Nusxa olindi"; }); }
+      else { prompt("Matnni nusxalang:",text); }
+    });
+    dlBtn.addEventListener("click",function(){
+      const s=new XMLSerializer().serializeToString(document.getElementById("finalSvg"));
+      const blob=new Blob([s],{type:"image/svg+xml"});
+      const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="pc-usta-build.svg";
+      document.body.appendChild(a); a.click(); a.remove();
+    });
+    againBtn.addEventListener("click",startGame);
+
+    // bar animation
+    setTimeout(function(){
+      const bar=fin.querySelector("i[data-w]"); if(bar) bar.style.width=bar.dataset.w;
+    },100);
+
+    // best score
+    let best=0; try{ best=+localStorage.getItem(BEST)||0; }catch(e){}
+    if(game.score>best){ best=game.score; try{ localStorage.setItem(BEST,best); }catch(e){} }
+    document.getElementById("bestTxt").textContent="Eng yaxshi ball: "+best;
+    fin.scrollIntoView({behavior:"smooth",block:"center"});
+  }
+
+  function startGame(){
+    game=newGame();
+    document.getElementById("gStart").classList.add("hidden");
+    document.getElementById("gFinal").classList.add("hidden");
+    document.getElementById("over").classList.add("hidden");
+    document.getElementById("gGame").classList.remove("hidden");
+    document.getElementById("msg").className="msg";
+    drawPreview(false);
+    renderOptions();
+    updateBuiltList();
+    showMsg("ok","🚀 Boshladik! Birinchi qadam — protsessor. Soketga e'tibor bering.");
+    document.getElementById("oyin").scrollIntoView({behavior:"smooth",block:"start"});
+  }
+
+  function initBest(){
+    let best=0; try{ best=+localStorage.getItem(BEST)||0; }catch(e){}
+    document.getElementById("bestTxt").textContent=best?"Eng yaxshi ball: "+best:"";
+  }
+
+  document.getElementById("gBegin").addEventListener("click",startGame);
+  document.getElementById("gReset").addEventListener("click",startGame);
+  document.getElementById("overBtn").addEventListener("click",startGame);
+  initBest();
+  drawPC({},document.getElementById("previewSvg"),false);
+})();
+</script>
+</body>
+</html>
